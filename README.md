@@ -1,8 +1,8 @@
-# 🔥 matchbook
+# ⚡ matchbook
 
 A simple limit order book in Rust
 
-## Motivation
+## Background
 
 Many existing trading engines are written in C++. Rust offers many advantages such as:
 
@@ -11,8 +11,6 @@ Many existing trading engines are written in C++. Rust offers many advantages su
 - Safer concurrency and memory management
 
 This project serves as a learning experiment in translating a C++ order book into Rust
-
----
 
 ## Credits
 

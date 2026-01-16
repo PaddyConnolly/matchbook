@@ -21,6 +21,18 @@ pub struct Quantity(pub u32);
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct OrderId(u64);
 
+impl Price {
+    pub fn new(value: u32) -> Self {
+        Price(value)
+    }
+}
+
+impl OrderId {
+    pub fn new(value: u64) -> Self {
+        OrderId(value)
+    }
+}
+
 impl Sub for Quantity {
     type Output = Self;
     fn sub(self, other: Self) -> Self::Output {

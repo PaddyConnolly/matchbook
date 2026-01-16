@@ -481,3 +481,100 @@ mod trades {
         assert!(ob.trades().is_empty());
     }
 }
+
+mod market_orders {
+    use super::*;
+
+    fn buy_market(id: u64, q: u32) -> Order {
+        Order::new(order_id(id), OrderType::Market, Side::Buy, price(0), qty(q))
+    }
+
+    fn sell_market(id: u64, q: u32) -> Order {
+        Order::new(
+            order_id(id),
+            OrderType::Market,
+            Side::Sell,
+            price(0),
+            qty(q),
+        )
+    }
+
+    #[test]
+    fn market_buy_rejected_when_no_asks() {
+        let mut ob = Orderbook::new();
+        let result = ob.add(buy_market(1, 50));
+        assert!(matches!(result, Err(OrderError::NoLiquidity)));
+    }
+
+    #[test]
+    fn market_sell_rejected_when_no_bids() {
+        let mut ob = Orderbook::new();
+        let result = ob.add(sell_market(1, 50));
+        assert!(matches!(result, Err(OrderError::NoLiquidity)));
+    }
+
+    #[test]
+    fn market_buy_executes_at_ask_price() {
+        let mut ob = Orderbook::new();
+        ob.add(sell_order(1, 100, 50)).unwrap();
+        ob.add(buy_market(2, 50)).unwrap();
+        ob.match_orders();
+
+        let trade = ob.trades().last().unwrap();
+        assert_eq!(trade.bid_trade.price(), price(100)); // executes at ask price, not MAX
+    }
+
+    #[test]
+    fn market_sell_executes_at_bid_price() {
+        let mut ob = Orderbook::new();
+        ob.add(buy_order(1, 100, 50)).unwrap();
+        ob.add(sell_market(2, 50)).unwrap();
+        ob.match_orders();
+
+        let trade = ob.trades().last().unwrap();
+        assert_eq!(trade.ask_trade.price(), price(100)); // executes at bid price, not 0
+    }
+
+    #[test]
+    fn market_order_sweeps_multiple_levels() {
+        let mut ob = Orderbook::new();
+        ob.add(sell_order(1, 100, 10)).unwrap();
+        ob.add(sell_order(2, 101, 10)).unwrap();
+        ob.add(sell_order(3, 102, 10)).unwrap();
+        ob.add(buy_market(4, 25)).unwrap();
+        ob.match_orders();
+
+        assert_eq!(ob.trades().len(), 3);
+        let levels = ob.get_levels();
+        assert!(levels.bids().is_empty());
+        assert_eq!(levels.asks().len(), 1);
+        assert_eq!(levels.asks()[0].quantity(), qty(5));
+    }
+
+    #[test]
+    fn market_order_partial_fill_cancelled() {
+        let mut ob = Orderbook::new();
+        ob.add(sell_order(1, 100, 30)).unwrap();
+        ob.add(buy_market(2, 50)).unwrap();
+        ob.match_orders();
+
+        // Market order partially filled (30), remainder cancelled
+        let levels = ob.get_levels();
+        assert!(levels.bids().is_empty());
+        assert!(levels.asks().is_empty());
+        assert_eq!(ob.trades().len(), 1);
+        assert_eq!(ob.trades().last().unwrap().bid_trade.quantity(), qty(30));
+    }
+
+    #[test]
+    fn market_order_full_fill() {
+        let mut ob = Orderbook::new();
+        ob.add(sell_order(1, 100, 100)).unwrap();
+        ob.add(buy_market(2, 50)).unwrap();
+        ob.match_orders();
+
+        let levels = ob.get_levels();
+        assert!(levels.bids().is_empty());
+        assert_eq!(levels.asks()[0].quantity(), qty(50));
+    }
+}

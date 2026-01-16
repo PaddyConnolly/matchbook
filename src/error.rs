@@ -8,4 +8,8 @@ pub enum OrderError {
     CantMatch,
     #[error("Order ID not found")]
     OrderNotFound,
+    #[error("Not enough liquidity to fully fill order")]
+    CantFullyFill,
+    #[error("No liquidity to fill order")]
+    NoLiquidity,
 }

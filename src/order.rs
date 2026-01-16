@@ -22,11 +22,21 @@ impl Order {
         price: Price,
         initial_quantity: Quantity,
     ) -> Order {
+        // Market orders use extreme prices to ensure they match
+        let effective_price = if order_type == OrderType::Market {
+            match side {
+                Side::Buy => Price::max(),  // willing to pay anything
+                Side::Sell => Price::min(), // willing to sell at any price
+            }
+        } else {
+            price
+        };
+
         Order {
             order_id,
             order_type,
             side,
-            price,
+            price: effective_price,
             initial_quantity,
             remaining_quantity: initial_quantity,
         }

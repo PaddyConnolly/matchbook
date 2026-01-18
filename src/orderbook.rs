@@ -70,7 +70,7 @@ impl Orderbook {
         }
     }
 
-    pub fn add(&mut self, order: Order) -> Result<(), OrderError> {
+    pub fn add_order(&mut self, order: Order) -> Result<(), OrderError> {
         if self.orders.contains(order.order_id) {
             return Err(OrderError::IdExists);
         }
@@ -528,7 +528,7 @@ mod tests {
         #[test]
         fn add_buy_order() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
             let levels = ob.get_levels();
             assert_eq!(levels.bids.0.len(), 1);
             assert_eq!(levels.bids.0[0].price, price(100));
@@ -538,7 +538,7 @@ mod tests {
         #[test]
         fn add_sell_order() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
             let levels = ob.get_levels();
             assert_eq!(levels.asks.0.len(), 1);
             assert_eq!(levels.asks.0[0].price, price(100));
@@ -548,16 +548,16 @@ mod tests {
         #[test]
         fn add_duplicate_id_fails() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            let result = ob.add(buy_order(1, 110, 60));
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            let result = ob.add_order(buy_order(1, 110, 60));
             assert!(matches!(result, Err(OrderError::IdExists)));
         }
 
         #[test]
         fn add_multiple_orders_same_price() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            ob.add(buy_order(2, 100, 30)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_order(2, 100, 30)).unwrap();
             let levels = ob.get_levels();
             assert_eq!(levels.bids.0.len(), 1);
             assert_eq!(levels.bids.0[0].quantity, qty(80));
@@ -566,9 +566,9 @@ mod tests {
         #[test]
         fn add_multiple_orders_different_prices() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            ob.add(buy_order(2, 110, 30)).unwrap();
-            ob.add(buy_order(3, 90, 20)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_order(2, 110, 30)).unwrap();
+            ob.add_order(buy_order(3, 90, 20)).unwrap();
             let levels = ob.get_levels();
             assert_eq!(levels.bids.0.len(), 3);
             assert_eq!(levels.bids.0[0].price, price(110));
@@ -579,9 +579,9 @@ mod tests {
         #[test]
         fn asks_sorted_low_to_high() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
-            ob.add(sell_order(2, 110, 30)).unwrap();
-            ob.add(sell_order(3, 90, 20)).unwrap();
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
+            ob.add_order(sell_order(2, 110, 30)).unwrap();
+            ob.add_order(sell_order(3, 90, 20)).unwrap();
             let levels = ob.get_levels();
             assert_eq!(levels.asks.0.len(), 3);
             assert_eq!(levels.asks.0[0].price, price(90));
@@ -592,7 +592,7 @@ mod tests {
         #[test]
         fn can_match_buy_when_ask_exists_at_or_below() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
             assert!(ob.can_match(Side::Buy, price(100)));
             assert!(ob.can_match(Side::Buy, price(110)));
             assert!(!ob.can_match(Side::Buy, price(90)));
@@ -601,7 +601,7 @@ mod tests {
         #[test]
         fn can_match_sell_when_bid_exists_at_or_above() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
             assert!(ob.can_match(Side::Sell, price(100)));
             assert!(ob.can_match(Side::Sell, price(90)));
             assert!(!ob.can_match(Side::Sell, price(110)));
@@ -618,23 +618,23 @@ mod tests {
     #[test]
     fn fak_rejected_when_no_match_possible() {
         let mut ob = Orderbook::new();
-        let result = ob.add(buy_fak(1, 100, 50));
+        let result = ob.add_order(buy_fak(1, 100, 50));
         assert!(matches!(result, Err(OrderError::CantMatch)));
     }
 
     #[test]
     fn fak_rejected_when_price_doesnt_cross() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 110, 50)).unwrap();
-        let result = ob.add(buy_fak(2, 100, 50));
+        ob.add_order(sell_order(1, 110, 50)).unwrap();
+        let result = ob.add_order(buy_fak(2, 100, 50));
         assert!(matches!(result, Err(OrderError::CantMatch)));
     }
 
     #[test]
     fn fak_accepted_when_can_match() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 50)).unwrap();
-        let result = ob.add(buy_fak(2, 100, 50));
+        ob.add_order(sell_order(1, 100, 50)).unwrap();
+        let result = ob.add_order(buy_fak(2, 100, 50));
         assert!(result.is_ok());
     }
 
@@ -664,77 +664,77 @@ mod tests {
         #[test]
         fn fok_rejected_when_empty_book() {
             let mut ob = Orderbook::new();
-            let result = ob.add(buy_fok(1, 100, 50));
+            let result = ob.add_order(buy_fok(1, 100, 50));
             assert!(matches!(result, Err(OrderError::CantFullyFill)));
         }
 
         #[test]
         fn fok_rejected_when_insufficient_quantity() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 30)).unwrap();
-            let result = ob.add(buy_fok(2, 100, 50));
+            ob.add_order(sell_order(1, 100, 30)).unwrap();
+            let result = ob.add_order(buy_fok(2, 100, 50));
             assert!(matches!(result, Err(OrderError::CantFullyFill)));
         }
 
         #[test]
         fn fok_rejected_when_price_doesnt_cross() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 110, 100)).unwrap();
-            let result = ob.add(buy_fok(2, 100, 50));
+            ob.add_order(sell_order(1, 110, 100)).unwrap();
+            let result = ob.add_order(buy_fok(2, 100, 50));
             assert!(matches!(result, Err(OrderError::CantFullyFill)));
         }
 
         #[test]
         fn fok_accepted_when_can_fully_fill_exact() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
-            let result = ob.add(buy_fok(2, 100, 50));
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
+            let result = ob.add_order(buy_fok(2, 100, 50));
             assert!(result.is_ok());
         }
 
         #[test]
         fn fok_accepted_when_can_fully_fill_excess_liquidity() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 100)).unwrap();
-            let result = ob.add(buy_fok(2, 100, 50));
+            ob.add_order(sell_order(1, 100, 100)).unwrap();
+            let result = ob.add_order(buy_fok(2, 100, 50));
             assert!(result.is_ok());
         }
 
         #[test]
         fn fok_accepted_across_multiple_price_levels() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 20)).unwrap();
-            ob.add(sell_order(2, 101, 20)).unwrap();
-            ob.add(sell_order(3, 102, 20)).unwrap();
+            ob.add_order(sell_order(1, 100, 20)).unwrap();
+            ob.add_order(sell_order(2, 101, 20)).unwrap();
+            ob.add_order(sell_order(3, 102, 20)).unwrap();
             // Total 60 available at or below 102
-            let result = ob.add(buy_fok(4, 102, 50));
+            let result = ob.add_order(buy_fok(4, 102, 50));
             assert!(result.is_ok());
         }
 
         #[test]
         fn fok_sell_rejected_when_insufficient_bids() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 30)).unwrap();
-            let result = ob.add(sell_fok(2, 100, 50));
+            ob.add_order(buy_order(1, 100, 30)).unwrap();
+            let result = ob.add_order(sell_fok(2, 100, 50));
             assert!(matches!(result, Err(OrderError::CantFullyFill)));
         }
 
         #[test]
         fn fok_sell_accepted_when_sufficient_bids() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            ob.add(buy_order(2, 99, 50)).unwrap();
-            let result = ob.add(sell_fok(3, 99, 75));
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_order(2, 99, 50)).unwrap();
+            let result = ob.add_order(sell_fok(3, 99, 75));
             assert!(result.is_ok());
         }
 
         #[test]
         fn can_fully_fill_checks_price_constraint() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
-            ob.add(sell_order(2, 110, 50)).unwrap();
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
+            ob.add_order(sell_order(2, 110, 50)).unwrap();
             // 100 total, but only 50 at price <= 100
-            let result = ob.add(buy_fok(3, 100, 75));
+            let result = ob.add_order(buy_fok(3, 100, 75));
             assert!(matches!(result, Err(OrderError::CantFullyFill)));
         }
     }
@@ -759,30 +759,30 @@ mod tests {
         #[test]
         fn market_buy_rejected_when_no_liquidity() {
             let mut ob = Orderbook::new();
-            let result = ob.add(buy_market(1, 50));
+            let result = ob.add_order(buy_market(1, 50));
             assert!(matches!(result, Err(OrderError::NoLiquidity)));
         }
 
         #[test]
         fn market_sell_rejected_when_no_liquidity() {
             let mut ob = Orderbook::new();
-            let result = ob.add(sell_market(1, 50));
+            let result = ob.add_order(sell_market(1, 50));
             assert!(matches!(result, Err(OrderError::NoLiquidity)));
         }
 
         #[test]
         fn market_buy_accepted_when_asks_exist() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
-            let result = ob.add(buy_market(2, 50));
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
+            let result = ob.add_order(buy_market(2, 50));
             assert!(result.is_ok());
         }
 
         #[test]
         fn market_sell_accepted_when_bids_exist() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            let result = ob.add(sell_market(2, 50));
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            let result = ob.add_order(sell_market(2, 50));
             assert!(result.is_ok());
         }
 
@@ -845,8 +845,8 @@ mod tests {
         #[test]
         fn prune_removes_gfd_bids() {
             let mut ob = Orderbook::new();
-            ob.add(buy_gfd(1, 100, 50)).unwrap();
-            ob.add(buy_gfd(2, 99, 50)).unwrap();
+            ob.add_order(buy_gfd(1, 100, 50)).unwrap();
+            ob.add_order(buy_gfd(2, 99, 50)).unwrap();
             ob.prune_good_for_day_orders();
             assert!(ob.get_levels().bids.is_empty());
         }
@@ -854,8 +854,8 @@ mod tests {
         #[test]
         fn prune_removes_gfd_asks() {
             let mut ob = Orderbook::new();
-            ob.add(sell_gfd(1, 100, 50)).unwrap();
-            ob.add(sell_gfd(2, 101, 50)).unwrap();
+            ob.add_order(sell_gfd(1, 100, 50)).unwrap();
+            ob.add_order(sell_gfd(2, 101, 50)).unwrap();
             ob.prune_good_for_day_orders();
             assert!(ob.get_levels().asks.is_empty());
         }
@@ -863,8 +863,8 @@ mod tests {
         #[test]
         fn prune_leaves_gtc_orders() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            ob.add(sell_order(2, 110, 50)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(sell_order(2, 110, 50)).unwrap();
             ob.prune_good_for_day_orders();
 
             let levels = ob.get_levels();
@@ -875,10 +875,10 @@ mod tests {
         #[test]
         fn prune_mixed_gtc_and_gfd() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap(); // GTC - stays
-            ob.add(buy_gfd(2, 99, 50)).unwrap(); // GFD - removed
-            ob.add(buy_order(3, 98, 50)).unwrap(); // GTC - stays
-            ob.add(buy_gfd(4, 97, 50)).unwrap(); // GFD - removed
+            ob.add_order(buy_order(1, 100, 50)).unwrap(); // GTC - stays
+            ob.add_order(buy_gfd(2, 99, 50)).unwrap(); // GFD - removed
+            ob.add_order(buy_order(3, 98, 50)).unwrap(); // GTC - stays
+            ob.add_order(buy_gfd(4, 97, 50)).unwrap(); // GFD - removed
 
             ob.prune_good_for_day_orders();
 
@@ -891,9 +891,9 @@ mod tests {
         #[test]
         fn prune_same_price_level_mixed() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 10)).unwrap(); // GTC
-            ob.add(buy_gfd(2, 100, 20)).unwrap(); // GFD
-            ob.add(buy_order(3, 100, 30)).unwrap(); // GTC
+            ob.add_order(buy_order(1, 100, 10)).unwrap(); // GTC
+            ob.add_order(buy_gfd(2, 100, 20)).unwrap(); // GFD
+            ob.add_order(buy_order(3, 100, 30)).unwrap(); // GTC
 
             ob.prune_good_for_day_orders();
 
@@ -905,12 +905,12 @@ mod tests {
         #[test]
         fn prune_leaves_fak_orders() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 100)).unwrap(); // liquidity for FAK
-            ob.add(buy_fak(2, 100, 50)).unwrap();
+            ob.add_order(sell_order(1, 100, 100)).unwrap(); // liquidity for FAK
+            ob.add_order(buy_fak(2, 100, 50)).unwrap();
             ob.match_orders();
 
             // Add a GFD that rests
-            ob.add(buy_gfd(3, 90, 50)).unwrap();
+            ob.add_order(buy_gfd(3, 90, 50)).unwrap();
             ob.prune_good_for_day_orders();
 
             // GFD removed, book should be empty (FAK was filled/cancelled)
@@ -923,8 +923,8 @@ mod tests {
             let mut ob = Orderbook::new();
             // FOK can't rest on book (must fill entirely or reject)
             // Just verify prune doesn't affect other types
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            ob.add(buy_gfd(2, 99, 50)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_gfd(2, 99, 50)).unwrap();
 
             ob.prune_good_for_day_orders();
 
@@ -936,8 +936,8 @@ mod tests {
         #[test]
         fn prune_after_partial_fill() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 30)).unwrap();
-            ob.add(buy_gfd(2, 100, 50)).unwrap();
+            ob.add_order(sell_order(1, 100, 30)).unwrap();
+            ob.add_order(buy_gfd(2, 100, 50)).unwrap();
             ob.match_orders();
 
             // GFD has 20 remaining
@@ -953,9 +953,9 @@ mod tests {
         #[test]
         fn prune_cleans_up_empty_price_levels() {
             let mut ob = Orderbook::new();
-            ob.add(buy_gfd(1, 100, 50)).unwrap();
-            ob.add(buy_gfd(2, 99, 50)).unwrap();
-            ob.add(buy_gfd(3, 98, 50)).unwrap();
+            ob.add_order(buy_gfd(1, 100, 50)).unwrap();
+            ob.add_order(buy_gfd(2, 99, 50)).unwrap();
+            ob.add_order(buy_gfd(3, 98, 50)).unwrap();
 
             ob.prune_good_for_day_orders();
 
@@ -967,8 +967,8 @@ mod tests {
         #[test]
         fn prune_multiple_times_is_idempotent() {
             let mut ob = Orderbook::new();
-            ob.add(buy_order(1, 100, 50)).unwrap();
-            ob.add(buy_gfd(2, 99, 50)).unwrap();
+            ob.add_order(buy_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_gfd(2, 99, 50)).unwrap();
 
             ob.prune_good_for_day_orders();
             ob.prune_good_for_day_orders();
@@ -982,8 +982,8 @@ mod tests {
         #[test]
         fn prune_does_not_affect_trades() {
             let mut ob = Orderbook::new();
-            ob.add(sell_order(1, 100, 50)).unwrap();
-            ob.add(buy_gfd(2, 100, 50)).unwrap();
+            ob.add_order(sell_order(1, 100, 50)).unwrap();
+            ob.add_order(buy_gfd(2, 100, 50)).unwrap();
             ob.match_orders();
 
             assert_eq!(ob.trades().len(), 1);
@@ -997,10 +997,10 @@ mod tests {
         #[test]
         fn prune_both_sides() {
             let mut ob = Orderbook::new();
-            ob.add(buy_gfd(1, 100, 50)).unwrap();
-            ob.add(buy_order(2, 99, 50)).unwrap();
-            ob.add(sell_gfd(3, 110, 50)).unwrap();
-            ob.add(sell_order(4, 111, 50)).unwrap();
+            ob.add_order(buy_gfd(1, 100, 50)).unwrap();
+            ob.add_order(buy_order(2, 99, 50)).unwrap();
+            ob.add_order(sell_gfd(3, 110, 50)).unwrap();
+            ob.add_order(sell_order(4, 111, 50)).unwrap();
 
             ob.prune_good_for_day_orders();
 

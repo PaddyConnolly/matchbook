@@ -62,8 +62,8 @@ mod matching {
     #[test]
     fn no_match_when_bid_below_ask() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 110, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 110, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert_eq!(levels.bids()[0].quantity(), qty(50));
@@ -73,8 +73,8 @@ mod matching {
     #[test]
     fn exact_match_removes_both_orders() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -84,8 +84,8 @@ mod matching {
     #[test]
     fn partial_fill_bid_larger() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 100)).unwrap();
-        ob.add(sell_order(2, 100, 40)).unwrap();
+        ob.add_order(buy_order(1, 100, 100)).unwrap();
+        ob.add_order(sell_order(2, 100, 40)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert_eq!(levels.bids()[0].quantity(), qty(60));
@@ -95,8 +95,8 @@ mod matching {
     #[test]
     fn partial_fill_ask_larger() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 40)).unwrap();
-        ob.add(sell_order(2, 100, 100)).unwrap();
+        ob.add_order(buy_order(1, 100, 40)).unwrap();
+        ob.add_order(sell_order(2, 100, 100)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -106,8 +106,8 @@ mod matching {
     #[test]
     fn match_when_bid_higher_than_ask() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 110, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 110, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -117,9 +117,9 @@ mod matching {
     #[test]
     fn multiple_matches_in_sequence() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 30)).unwrap();
-        ob.add(sell_order(2, 100, 30)).unwrap();
-        ob.add(buy_order(3, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 30)).unwrap();
+        ob.add_order(sell_order(2, 100, 30)).unwrap();
+        ob.add_order(buy_order(3, 100, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -129,9 +129,9 @@ mod matching {
     #[test]
     fn matches_best_price_first() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 90, 25)).unwrap();
-        ob.add(sell_order(2, 100, 25)).unwrap();
-        ob.add(buy_order(3, 100, 30)).unwrap();
+        ob.add_order(sell_order(1, 90, 25)).unwrap();
+        ob.add_order(sell_order(2, 100, 25)).unwrap();
+        ob.add_order(buy_order(3, 100, 30)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -143,9 +143,9 @@ mod matching {
     #[test]
     fn fifo_matching_same_price() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
-        ob.add(buy_order(3, 100, 60)).unwrap();
+        ob.add_order(sell_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(3, 100, 60)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -155,10 +155,10 @@ mod matching {
     #[test]
     fn match_clears_multiple_price_levels() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 10)).unwrap();
-        ob.add(sell_order(2, 101, 10)).unwrap();
-        ob.add(sell_order(3, 102, 10)).unwrap();
-        ob.add(buy_order(4, 105, 25)).unwrap();
+        ob.add_order(sell_order(1, 100, 10)).unwrap();
+        ob.add_order(sell_order(2, 101, 10)).unwrap();
+        ob.add_order(sell_order(3, 102, 10)).unwrap();
+        ob.add_order(buy_order(4, 105, 25)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -176,8 +176,8 @@ mod fill_and_kill {
     #[test]
     fn fak_fully_filled() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 50)).unwrap();
-        ob.add(buy_fak(2, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 50)).unwrap();
+        ob.add_order(buy_fak(2, 100, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -187,8 +187,8 @@ mod fill_and_kill {
     #[test]
     fn fak_partial_fill_remainder_cancelled() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 30)).unwrap();
-        ob.add(buy_fak(2, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 30)).unwrap();
+        ob.add_order(buy_fak(2, 100, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -198,8 +198,8 @@ mod fill_and_kill {
     #[test]
     fn fak_sell_works() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_fak(2, 100, 30)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_fak(2, 100, 30)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         assert_eq!(levels.bids()[0].quantity(), qty(20));
@@ -209,9 +209,9 @@ mod fill_and_kill {
     #[test]
     fn fak_cancelled_when_no_liquidity_remains() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 20)).unwrap();
-        ob.add(sell_order(2, 110, 20)).unwrap();
-        ob.add(buy_fak(3, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 20)).unwrap();
+        ob.add_order(sell_order(2, 110, 20)).unwrap();
+        ob.add_order(buy_fak(3, 100, 50)).unwrap();
         ob.match_orders();
         let levels = ob.get_levels();
         // FAK can only match 20 @ 100, rest cancelled
@@ -230,7 +230,7 @@ mod cancel {
     #[test]
     fn cancel_existing_buy_order() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
         ob.cancel_order(order_id(1)).unwrap();
         let levels = ob.get_levels();
         assert!(levels.bids().is_empty());
@@ -239,7 +239,7 @@ mod cancel {
     #[test]
     fn cancel_existing_sell_order() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 50)).unwrap();
         ob.cancel_order(order_id(1)).unwrap();
         let levels = ob.get_levels();
         assert!(levels.asks().is_empty());
@@ -255,9 +255,9 @@ mod cancel {
     #[test]
     fn cancel_one_of_many_at_price() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(buy_order(2, 100, 30)).unwrap();
-        ob.add(buy_order(3, 100, 20)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(buy_order(2, 100, 30)).unwrap();
+        ob.add_order(buy_order(3, 100, 20)).unwrap();
         ob.cancel_order(order_id(2)).unwrap();
         let levels = ob.get_levels();
         assert_eq!(levels.bids()[0].quantity(), qty(70));
@@ -266,8 +266,8 @@ mod cancel {
     #[test]
     fn cancel_removes_empty_price_level() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(buy_order(2, 110, 30)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(buy_order(2, 110, 30)).unwrap();
         ob.cancel_order(order_id(1)).unwrap();
         let levels = ob.get_levels();
         assert_eq!(levels.bids().len(), 1);
@@ -277,7 +277,7 @@ mod cancel {
     #[test]
     fn cancel_same_order_twice_fails() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
         ob.cancel_order(order_id(1)).unwrap();
         let result = ob.cancel_order(order_id(1));
         assert!(matches!(result, Err(OrderError::OrderNotFound)));
@@ -294,13 +294,13 @@ mod scenarios {
         let mut ob = Orderbook::new();
 
         // Market makers post quotes
-        ob.add(buy_order(1, 99, 100)).unwrap();
-        ob.add(buy_order(2, 98, 100)).unwrap();
-        ob.add(sell_order(3, 101, 100)).unwrap();
-        ob.add(sell_order(4, 102, 100)).unwrap();
+        ob.add_order(buy_order(1, 99, 100)).unwrap();
+        ob.add_order(buy_order(2, 98, 100)).unwrap();
+        ob.add_order(sell_order(3, 101, 100)).unwrap();
+        ob.add_order(sell_order(4, 102, 100)).unwrap();
 
         // Aggressive buyer crosses spread
-        ob.add(buy_order(5, 101, 50)).unwrap();
+        ob.add_order(buy_order(5, 101, 50)).unwrap();
         ob.match_orders();
 
         let levels = ob.get_levels();
@@ -313,8 +313,9 @@ mod scenarios {
         let mut ob = Orderbook::new();
 
         for i in 0..10 {
-            ob.add(buy_order(i, 100 - i as u32, 10)).unwrap();
-            ob.add(sell_order(100 + i, 110 + i as u32, 10)).unwrap();
+            ob.add_order(buy_order(i, 100 - i as u32, 10)).unwrap();
+            ob.add_order(sell_order(100 + i, 110 + i as u32, 10))
+                .unwrap();
         }
 
         let levels = ob.get_levels();
@@ -330,13 +331,13 @@ mod scenarios {
     fn large_order_sweeps_book() {
         let mut ob = Orderbook::new();
 
-        ob.add(sell_order(1, 100, 10)).unwrap();
-        ob.add(sell_order(2, 101, 20)).unwrap();
-        ob.add(sell_order(3, 102, 30)).unwrap();
-        ob.add(sell_order(4, 103, 40)).unwrap();
+        ob.add_order(sell_order(1, 100, 10)).unwrap();
+        ob.add_order(sell_order(2, 101, 20)).unwrap();
+        ob.add_order(sell_order(3, 102, 30)).unwrap();
+        ob.add_order(sell_order(4, 103, 40)).unwrap();
 
         // Large buy sweeps through multiple levels
-        ob.add(buy_order(5, 103, 75)).unwrap();
+        ob.add_order(buy_order(5, 103, 75)).unwrap();
         ob.match_orders();
 
         let levels = ob.get_levels();
@@ -354,8 +355,8 @@ mod trades {
     #[test]
     fn no_trades_when_no_match() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 110, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 110, 50)).unwrap();
         ob.match_orders();
         assert!(ob.trades().is_empty());
     }
@@ -363,8 +364,8 @@ mod trades {
     #[test]
     fn single_trade_on_exact_match() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
         ob.match_orders();
 
         assert_eq!(ob.trades().len(), 1);
@@ -377,8 +378,8 @@ mod trades {
     #[test]
     fn trade_price_is_resting_order_price() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 50)).unwrap(); // resting order
-        ob.add(buy_order(2, 110, 50)).unwrap(); // aggressor willing to pay more
+        ob.add_order(sell_order(1, 100, 50)).unwrap(); // resting order
+        ob.add_order(buy_order(2, 110, 50)).unwrap(); // aggressor willing to pay more
         ob.match_orders();
 
         let trade = ob.trades().last().unwrap();
@@ -390,9 +391,9 @@ mod trades {
     #[test]
     fn multiple_trades_from_partial_fills() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 30)).unwrap();
-        ob.add(sell_order(2, 100, 30)).unwrap();
-        ob.add(buy_order(3, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 30)).unwrap();
+        ob.add_order(sell_order(2, 100, 30)).unwrap();
+        ob.add_order(buy_order(3, 100, 50)).unwrap();
         ob.match_orders();
 
         // First trade: buy 50 vs sell 30 -> fills 30
@@ -409,10 +410,10 @@ mod trades {
     #[test]
     fn trades_across_multiple_price_levels() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 10)).unwrap();
-        ob.add(sell_order(2, 101, 10)).unwrap();
-        ob.add(sell_order(3, 102, 10)).unwrap();
-        ob.add(buy_order(4, 105, 25)).unwrap();
+        ob.add_order(sell_order(1, 100, 10)).unwrap();
+        ob.add_order(sell_order(2, 101, 10)).unwrap();
+        ob.add_order(sell_order(3, 102, 10)).unwrap();
+        ob.add_order(buy_order(4, 105, 25)).unwrap();
         ob.match_orders();
 
         assert_eq!(ob.trades().len(), 3);
@@ -429,8 +430,8 @@ mod trades {
     #[test]
     fn trade_records_both_sides() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
         ob.match_orders();
 
         let trade = ob.trades().last().unwrap();
@@ -445,13 +446,13 @@ mod trades {
     fn trades_persist_after_multiple_match_calls() {
         let mut ob = Orderbook::new();
 
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
         ob.match_orders();
         assert_eq!(ob.trades().len(), 1);
 
-        ob.add(buy_order(3, 100, 30)).unwrap();
-        ob.add(sell_order(4, 100, 30)).unwrap();
+        ob.add_order(buy_order(3, 100, 30)).unwrap();
+        ob.add_order(sell_order(4, 100, 30)).unwrap();
         ob.match_orders();
         assert_eq!(ob.trades().len(), 2);
     }
@@ -459,8 +460,8 @@ mod trades {
     #[test]
     fn fak_trade_recorded_before_cancel() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 30)).unwrap();
-        ob.add(buy_fak(2, 100, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 30)).unwrap();
+        ob.add_order(buy_fak(2, 100, 50)).unwrap();
         ob.match_orders();
 
         // FAK partially filled then cancelled, but trade should be recorded
@@ -472,8 +473,8 @@ mod trades {
     #[test]
     fn clear_trades_resets_history() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_order(2, 100, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_order(2, 100, 50)).unwrap();
         ob.match_orders();
         assert_eq!(ob.trades().len(), 1);
 
@@ -502,22 +503,22 @@ mod market_orders {
     #[test]
     fn market_buy_rejected_when_no_asks() {
         let mut ob = Orderbook::new();
-        let result = ob.add(buy_market(1, 50));
+        let result = ob.add_order(buy_market(1, 50));
         assert!(matches!(result, Err(OrderError::NoLiquidity)));
     }
 
     #[test]
     fn market_sell_rejected_when_no_bids() {
         let mut ob = Orderbook::new();
-        let result = ob.add(sell_market(1, 50));
+        let result = ob.add_order(sell_market(1, 50));
         assert!(matches!(result, Err(OrderError::NoLiquidity)));
     }
 
     #[test]
     fn market_buy_executes_at_ask_price() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 50)).unwrap();
-        ob.add(buy_market(2, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 50)).unwrap();
+        ob.add_order(buy_market(2, 50)).unwrap();
         ob.match_orders();
 
         let trade = ob.trades().last().unwrap();
@@ -527,8 +528,8 @@ mod market_orders {
     #[test]
     fn market_sell_executes_at_bid_price() {
         let mut ob = Orderbook::new();
-        ob.add(buy_order(1, 100, 50)).unwrap();
-        ob.add(sell_market(2, 50)).unwrap();
+        ob.add_order(buy_order(1, 100, 50)).unwrap();
+        ob.add_order(sell_market(2, 50)).unwrap();
         ob.match_orders();
 
         let trade = ob.trades().last().unwrap();
@@ -538,10 +539,10 @@ mod market_orders {
     #[test]
     fn market_order_sweeps_multiple_levels() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 10)).unwrap();
-        ob.add(sell_order(2, 101, 10)).unwrap();
-        ob.add(sell_order(3, 102, 10)).unwrap();
-        ob.add(buy_market(4, 25)).unwrap();
+        ob.add_order(sell_order(1, 100, 10)).unwrap();
+        ob.add_order(sell_order(2, 101, 10)).unwrap();
+        ob.add_order(sell_order(3, 102, 10)).unwrap();
+        ob.add_order(buy_market(4, 25)).unwrap();
         ob.match_orders();
 
         assert_eq!(ob.trades().len(), 3);
@@ -554,8 +555,8 @@ mod market_orders {
     #[test]
     fn market_order_partial_fill_cancelled() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 30)).unwrap();
-        ob.add(buy_market(2, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 30)).unwrap();
+        ob.add_order(buy_market(2, 50)).unwrap();
         ob.match_orders();
 
         // Market order partially filled (30), remainder cancelled
@@ -569,8 +570,8 @@ mod market_orders {
     #[test]
     fn market_order_full_fill() {
         let mut ob = Orderbook::new();
-        ob.add(sell_order(1, 100, 100)).unwrap();
-        ob.add(buy_market(2, 50)).unwrap();
+        ob.add_order(sell_order(1, 100, 100)).unwrap();
+        ob.add_order(buy_market(2, 50)).unwrap();
         ob.match_orders();
 
         let levels = ob.get_levels();

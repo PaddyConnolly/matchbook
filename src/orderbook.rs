@@ -123,6 +123,43 @@ impl Orderbook {
 
         Ok(())
     }
+
+    pub fn modify_order(
+        &mut self,
+        order_id: OrderId,
+        new_quantity: Quantity,
+    ) -> Result<(), OrderError> {
+        let (side, price) = {
+            let order = self.orders.get(order_id).ok_or(OrderError::OrderNotFound)?;
+            (order.side, order.price)
+        };
+
+        // Update in orders
+        if let Some(o) = self.orders.get_mut(order_id) {
+            o.remaining_quantity = new_quantity;
+        }
+
+        // Update in bids/asks
+        match side {
+            Side::Buy => {
+                if let Some(orders) = self.bids.get_mut(&Reverse(price))
+                    && let Some(o) = orders.get_mut(order_id)
+                {
+                    o.remaining_quantity = new_quantity;
+                }
+            }
+            Side::Sell => {
+                if let Some(orders) = self.asks.get_mut(&price)
+                    && let Some(o) = orders.get_mut(order_id)
+                {
+                    o.remaining_quantity = new_quantity;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     fn can_match(&self, side: Side, price: Price) -> bool {
         match side {
             Side::Buy => {

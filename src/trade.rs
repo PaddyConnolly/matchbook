@@ -1,13 +1,13 @@
 use crate::{OrderId, Price, Quantity};
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct TradeInfo {
     order_id: OrderId,
     price: Price,
     quantity: Quantity,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Trade {
     pub bid_trade: TradeInfo,
     pub ask_trade: TradeInfo,
@@ -61,7 +61,7 @@ impl TradeInfo {
         self.quantity
     }
     pub fn order_id(&self) -> OrderId {
-        self.order_id
+        self.order_id.clone()
     }
 }
 
@@ -70,19 +70,19 @@ mod tests {
     use super::*;
     use crate::{OrderId, Price, Quantity};
 
-    fn order_id(id: u64) -> OrderId {
+    fn order_id(id: String) -> OrderId {
         OrderId::new(id)
     }
 
-    fn price(p: u32) -> Price {
+    fn price(p: u64) -> Price {
         Price::new(p)
     }
 
-    fn qty(q: u32) -> Quantity {
+    fn qty(q: u64) -> Quantity {
         Quantity(q)
     }
 
-    fn sample_trade(bid_id: u64, ask_id: u64, p: u32, q: u32) -> Trade {
+    fn sample_trade(bid_id: String, ask_id: String, p: u64, q: u64) -> Trade {
         Trade {
             bid_trade: TradeInfo {
                 order_id: order_id(bid_id),
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn push_adds_trade() {
         let mut trades = Trades::new();
-        trades.push(sample_trade(1, 2, 100, 50));
+        trades.push(sample_trade("1".to_string(), "2".to_string(), 100, 50));
         assert_eq!(trades.len(), 1);
         assert!(!trades.is_empty());
     }
@@ -115,17 +115,17 @@ mod tests {
     #[test]
     fn push_multiple_trades() {
         let mut trades = Trades::new();
-        trades.push(sample_trade(1, 2, 100, 50));
-        trades.push(sample_trade(3, 4, 101, 30));
-        trades.push(sample_trade(5, 6, 99, 20));
+        trades.push(sample_trade("1".to_string(), "2".to_string(), 100, 50));
+        trades.push(sample_trade("3".to_string(), "4".to_string(), 101, 30));
+        trades.push(sample_trade("5".to_string(), "6".to_string(), 99, 20));
         assert_eq!(trades.len(), 3);
     }
 
     #[test]
     fn iter_yields_all_trades() {
         let mut trades = Trades::new();
-        trades.push(sample_trade(1, 2, 100, 50));
-        trades.push(sample_trade(3, 4, 101, 30));
+        trades.push(sample_trade("1".to_string(), "2".to_string(), 100, 50));
+        trades.push(sample_trade("3".to_string(), "4".to_string(), 101, 30));
 
         let collected: Vec<_> = trades.iter().collect();
         assert_eq!(collected.len(), 2);
@@ -134,8 +134,8 @@ mod tests {
     #[test]
     fn clear_removes_all_trades() {
         let mut trades = Trades::new();
-        trades.push(sample_trade(1, 2, 100, 50));
-        trades.push(sample_trade(3, 4, 101, 30));
+        trades.push(sample_trade("1".to_string(), "2".to_string(), 100, 50));
+        trades.push(sample_trade("3".to_string(), "4".to_string(), 101, 30));
         trades.clear();
         assert!(trades.is_empty());
     }
@@ -143,12 +143,12 @@ mod tests {
     #[test]
     fn last_returns_most_recent_trade() {
         let mut trades = Trades::new();
-        trades.push(sample_trade(1, 2, 100, 50));
-        trades.push(sample_trade(3, 4, 101, 30));
+        trades.push(sample_trade("1".to_string(), "2".to_string(), 100, 50));
+        trades.push(sample_trade("3".to_string(), "4".to_string(), 101, 30));
 
         let last = trades.last().unwrap();
-        assert_eq!(last.bid_trade.order_id, order_id(3));
-        assert_eq!(last.ask_trade.order_id, order_id(4));
+        assert_eq!(last.bid_trade.order_id, order_id("3".to_string()));
+        assert_eq!(last.ask_trade.order_id, order_id("4".to_string()));
     }
 
     #[test]
@@ -159,10 +159,10 @@ mod tests {
 
     #[test]
     fn trade_info_fields_accessible() {
-        let trade = sample_trade(1, 2, 100, 50);
-        assert_eq!(trade.bid_trade.order_id, order_id(1));
+        let trade = sample_trade("1".to_string(), "2".to_string(), 100, 50);
+        assert_eq!(trade.bid_trade.order_id, order_id("1".to_string()));
         assert_eq!(trade.bid_trade.price, price(100));
         assert_eq!(trade.bid_trade.quantity, qty(50));
-        assert_eq!(trade.ask_trade.order_id, order_id(2));
+        assert_eq!(trade.ask_trade.order_id, order_id("2".to_string()));
     }
 }

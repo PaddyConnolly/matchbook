@@ -16,21 +16,21 @@ pub enum Side {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, PartialOrd, Ord)]
-pub struct Price(u32);
+pub struct Price(u64);
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, PartialOrd, Ord)]
-pub struct Quantity(pub u32);
+pub struct Quantity(pub u64);
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub struct OrderId(u64);
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct OrderId(String);
 
 impl Price {
-    pub fn new(value: u32) -> Self {
+    pub fn new(value: u64) -> Self {
         Price(value)
     }
 
     pub fn max() -> Self {
-        Price(u32::MAX)
+        Price(u64::MAX)
     }
 
     pub fn min() -> Self {
@@ -39,7 +39,7 @@ impl Price {
 }
 
 impl OrderId {
-    pub fn new(value: u64) -> Self {
+    pub fn new(value: String) -> Self {
         OrderId(value)
     }
 }

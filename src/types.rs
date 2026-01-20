@@ -16,7 +16,7 @@ pub enum Side {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, PartialOrd, Ord)]
-pub struct Price(u64);
+pub struct Price(pub u64);
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, PartialOrd, Ord)]
 pub struct Quantity(pub u64);

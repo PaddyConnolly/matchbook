@@ -208,6 +208,12 @@ impl Orderbook {
         }
     }
 
+    pub fn midprice(&self) -> Option<Price> {
+        let best_bid = self.bids.keys().next().map(|Reverse(p)| p)?;
+        let best_ask = self.asks.keys().next()?;
+        Some(Price::new((best_bid.0 + best_ask.0) / 2))
+    }
+
     pub fn match_orders(&mut self) {
         // While we have bids and asks
         while let (Some(&Reverse(best_bid_price)), Some(&best_ask_price)) =
